@@ -43,8 +43,7 @@
    (and status (zero? exit-code))))
 
 (define (file-contents filename)
-  (with-input-from-file filename
-    (lambda () (read-string #f))))
+  (with-input-from-file filename read-string))
 
 (define (mimetype-valid? directory)
   (let ((filename (make-pathname directory "mimetype")))
@@ -61,10 +60,10 @@
 
 (define (container-valid? directory)
   (and-let* ((filename (container-file directory))
-             (_ (file-exists? filename))
+             ((file-exists? filename))
              (sxml (strip-namespaces (parse-xml filename)))
              (content-file (non-blank-string (container-content-file sxml)))
-             (_ (file-exists? (make-pathname directory content-file))))
+             ((file-exists? (make-pathname directory content-file))))
     #t))
 
 (define (epub-valid? directory)
