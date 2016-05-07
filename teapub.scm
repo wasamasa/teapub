@@ -90,7 +90,7 @@
     (map (lambda (item) (alist-ref item manifest))
          spine)))
 
-(define (epub-pages directory)
+(define (epub-documents directory)
   (let* ((sxml (parse-xml (container-file directory)))
          (content-file (make-pathname directory (container-content-file sxml)))
          (sxml (parse-xml content-file)))
@@ -102,8 +102,11 @@
 
 ;;; webkit
 
+(define documents (make-parameter #()))
+
 (define (initialize-webkit-window! window)
   (let ((chicken (jso-new (jso-ref window 'Object))))
+    (jso-set! chicken 'documents documents)
     (jso-set! chicken 'quit main-loop-quit!)
     (jso-set! window 'chicken chicken)))
 
@@ -135,7 +138,9 @@
       (print-error "Invalid EPUB file")
       (clean-up directory)
       (exit 1))
-    (let ((file (car (epub-pages directory))))
+    (documents (list->vector (epub-documents directory)))
+    (let ((file (make-absolute-pathname (current-directory)
+                                        "resources/index.html")))
       (open-webkit-window! (string-append "file://" file)))
     (clean-up directory)))
 
