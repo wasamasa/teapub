@@ -103,10 +103,12 @@
 ;;; webkit
 
 (define documents (make-parameter #()))
+(define stylesheet (make-parameter #f))
 
 (define (initialize-webkit-window! window)
   (let ((chicken (jso-new (jso-ref window 'Object))))
     (jso-set! chicken 'documents documents)
+    (jso-set! chicken 'stylesheet stylesheet)
     (jso-set! chicken 'quit main-loop-quit!)
     (jso-set! window 'chicken chicken)))
 
@@ -123,6 +125,10 @@
   (with-output-to-port (current-error-port)
     (lambda () (apply print args))))
 
+(define (file-url filename)
+  (let ((path (make-absolute-pathname (current-directory) filename)))
+    (string-append "file://" path)))
+
 (define (main)
   (when (not (= (length (command-line-arguments)) 1))
     (print-error "No filename specified")
@@ -138,10 +144,12 @@
       (print-error "Invalid EPUB file")
       (clean-up directory)
       (exit 1))
+
+    (when (file-exists? "style.css")
+      (stylesheet (file-url "style.css")))
     (documents (list->vector (epub-documents directory)))
-    (let ((file (make-absolute-pathname (current-directory)
-                                        "resources/index.html")))
-      (open-webkit-window! (string-append "file://" file)))
+    (open-webkit-window! (file-url "resources/index.html"))
+
     (clean-up directory)))
 
 (main)

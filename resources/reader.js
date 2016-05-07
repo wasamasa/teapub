@@ -5,10 +5,27 @@ function init() {
     documents = window.chicken.documents();
     index = 0;
     frame.src = documents[index];
+    frame.addEventListener('load', setStylesheet);
 }
 
-function getInnerBody(e) {
-    return e.contentDocument.documentElement.getElementsByTagName('body')[0];
+function injectStyle(element, stylesheet) {
+    var links = element.querySelectorAll('link[rel="stylesheet"]');
+    for (var i = 0; i < links.length; i++) {
+        links[i].remove();
+    }
+
+    var link = document.createElement('link');
+    link.href = stylesheet;
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    element.appendChild(link);
+}
+
+function setStylesheet() {
+    var stylesheet = window.chicken.stylesheet();
+    if (stylesheet) {
+        injectStyle(frame.contentDocument.head, stylesheet);
+    }
 }
 
 function prevDocument() {
@@ -26,7 +43,7 @@ function nextDocument() {
 }
 
 function pageUp() {
-    var inner = getInnerBody(frame);
+    var inner = frame.contentDocument.body;
     if (inner.scrollTop > 0) {
         var scrollTop = Math.max(inner.scrollTop - frame.clientHeight, 0);
         inner.scrollTop = scrollTop;
@@ -34,7 +51,7 @@ function pageUp() {
 }
 
 function pageDown() {
-    var inner = getInnerBody(frame);
+    var inner = frame.contentDocument.body;
     if (inner.scrollTop < inner.scrollHeight - frame.clientHeight) {
         var scrollTop = Math.min(inner.scrollTop + frame.clientHeight,
                                  inner.scrollHeight);
@@ -43,7 +60,7 @@ function pageDown() {
 }
 
 function pageDownOrNextDocument() {
-    var inner = getInnerBody(frame);
+    var inner = frame.contentDocument.body;
     if (inner.scrollTop < inner.scrollHeight - frame.clientHeight) {
         var scrollTop = Math.min(inner.scrollTop + frame.clientHeight,
                                  inner.scrollHeight);
