@@ -93,6 +93,7 @@
   (let* ((sxml (parse-xml (container-file directory)))
          (content-file (make-pathname directory (container-content-file sxml)))
          (sxml (parse-xml content-file)))
+    ;; NOTE: files referenced by the content file is relative to it
     (content-files (pathname-directory content-file) sxml)))
 
 (define (clean-up directory)
