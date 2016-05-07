@@ -7,6 +7,10 @@ function init() {
     frame.src = documents[index];
 }
 
+function getInnerBody(e) {
+    return e.contentDocument.documentElement.getElementsByTagName('body')[0];
+}
+
 function prevDocument() {
     if (index > 0) {
         index--;
@@ -22,26 +26,26 @@ function nextDocument() {
 }
 
 function pageUp() {
-    var inner = frame.contentDocument.documentElement;
+    var inner = getInnerBody(frame);
     if (inner.scrollTop > 0) {
-        var scrollTop = Math.max(inner.scrollTop - inner.clientHeight, 0);
+        var scrollTop = Math.max(inner.scrollTop - frame.clientHeight, 0);
         inner.scrollTop = scrollTop;
     }
 }
 
 function pageDown() {
-    var inner = frame.contentDocument.documentElement;
-    if (inner.scrollTop < inner.scrollHeight - inner.clientHeight) {
-        var scrollTop = Math.min(inner.scrollTop + inner.clientHeight,
+    var inner = getInnerBody(frame);
+    if (inner.scrollTop < inner.scrollHeight - frame.clientHeight) {
+        var scrollTop = Math.min(inner.scrollTop + frame.clientHeight,
                                  inner.scrollHeight);
         inner.scrollTop = scrollTop;
     }
 }
 
 function pageDownOrNextDocument() {
-    var inner = frame.contentDocument.documentElement;
-    if (inner.scrollTop < inner.scrollHeight - inner.clientHeight) {
-        var scrollTop = Math.min(inner.scrollTop + inner.clientHeight,
+    var inner = getInnerBody(frame);
+    if (inner.scrollTop < inner.scrollHeight - frame.clientHeight) {
+        var scrollTop = Math.min(inner.scrollTop + frame.clientHeight,
                                  inner.scrollHeight);
         inner.scrollTop = scrollTop;
     } else {
