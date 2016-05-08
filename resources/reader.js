@@ -42,35 +42,61 @@ function nextDocument() {
     }
 }
 
-function pageScrollSize() {
+function frameFontSize() {
     var inner = frame.contentDocument.body;
-    var fontSize = parseFloat(window.getComputedStyle(inner, null).fontSize);
-    return Math.floor(frame.clientHeight - fontSize);
+    return Math.ceil(parseFloat(window.getComputedStyle(inner, null).fontSize));
+}
+
+function framePageSize() {
+    return frame.clientHeight - frameFontSize();
+}
+
+function isFrameTop() {
+    return frame.contentDocument.body.scrollTop === 0;
+}
+
+function isFrameBottom() {
+    var inner = frame.contentDocument.body;
+    return inner.scrollTop === inner.scrollHeight - frame.clientHeight;
+}
+
+function scrollUpBy(amount) {
+    var inner = frame.contentDocument.body;
+    inner.scrollTop = Math.max(inner.scrollTop - amount, 0);
+}
+
+function scrollDownBy(amount) {
+    var inner = frame.contentDocument.body;
+    inner.scrollTop = Math.min(inner.scrollTop + amount, inner.scrollHeight);
+}
+
+function lineUp() {
+    if (!isFrameTop()) {
+        scrollUpBy(frameFontSize());
+    }
+}
+
+function lineDown() {
+    if (!isFrameBottom()) {
+        scrollDownBy(frameFontSize());
+    }
 }
 
 function pageUp() {
-    var inner = frame.contentDocument.body;
-    if (inner.scrollTop > 0) {
-        var scrollTop = Math.max(inner.scrollTop - pageScrollSize(), 0);
-        inner.scrollTop = scrollTop;
+    if (!isFrameTop()) {
+        scrollUpBy(framePageSize());
     }
 }
 
 function pageDown() {
-    var inner = frame.contentDocument.body;
-    if (inner.scrollTop < inner.scrollHeight - frame.clientHeight) {
-        var scrollTop = Math.min(inner.scrollTop + pageScrollSize(),
-                                 inner.scrollHeight);
-        inner.scrollTop = scrollTop;
+    if (!isFrameBottom()) {
+        scrollDownBy(framePageSize());
     }
 }
 
 function pageDownOrNextDocument() {
-    var inner = frame.contentDocument.body;
-    if (inner.scrollTop < inner.scrollHeight - frame.clientHeight) {
-        var scrollTop = Math.min(inner.scrollTop + pageScrollSize(),
-                                 inner.scrollHeight);
-        inner.scrollTop = scrollTop;
+    if (!isFrameBottom()) {
+        scrollDownBy(framePageSize());
     } else {
         nextDocument();
     }
@@ -89,6 +115,10 @@ function keyHandler(e) {
         pageUp();
     } else if (e.keyCode === 34) { // <pgdn>
         pageDown();
+    } else if (e.keyCode === 75 || e.keyCode == 38) { // K / <up>
+        lineUp();
+    } else if (e.keyCode === 74 || e.keyCode == 40) { // J / <down>
+        lineDown();
     } else if (e.keyCode === 80) { // P
         prevDocument();
     } else if (e.keyCode === 78) { // N
