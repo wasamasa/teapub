@@ -5,7 +5,17 @@ function init() {
     documents = window.chicken.documents();
     index = 0;
     frame.src = documents[index];
-    frame.addEventListener('load', setStylesheet);
+    frame.addEventListener('load', initFrame);
+}
+
+function initFrame() {
+    frame.contentWindow.focus();
+    frame.contentDocument.addEventListener('keydown', keyHandler);
+
+    var stylesheet = window.chicken.stylesheet();
+    if (stylesheet) {
+        injectStyle(frame.contentDocument.head, stylesheet);
+    }
 }
 
 function injectStyle(element, stylesheet) {
@@ -19,13 +29,6 @@ function injectStyle(element, stylesheet) {
     link.rel = 'stylesheet';
     link.type = 'text/css';
     element.appendChild(link);
-}
-
-function setStylesheet() {
-    var stylesheet = window.chicken.stylesheet();
-    if (stylesheet) {
-        injectStyle(frame.contentDocument.head, stylesheet);
-    }
 }
 
 function prevDocument() {
@@ -42,75 +45,10 @@ function nextDocument() {
     }
 }
 
-function frameFontSize() {
+function maybeNextDocument(e) {
     var inner = frame.contentDocument.body;
-    return Math.ceil(parseFloat(window.getComputedStyle(inner, null).fontSize));
-}
-
-function framePageSize() {
-    return frame.clientHeight - frameFontSize();
-}
-
-function isFrameTop() {
-    return frame.contentDocument.body.scrollTop === 0;
-}
-
-function isFrameBottom() {
-    var inner = frame.contentDocument.body;
-    return inner.scrollTop === inner.scrollHeight - frame.clientHeight;
-}
-
-function frameTop() {
-    if (!isFrameTop()) {
-        frame.contentDocument.body.scrollTop = 0;
-    }
-}
-
-function frameBottom() {
-    if (!isFrameBottom()) {
-        var inner = frame.contentDocument.body;
-        inner.scrollTop = inner.scrollHeight - frame.clientHeight;
-    }
-}
-
-function scrollUpBy(amount) {
-    var inner = frame.contentDocument.body;
-    inner.scrollTop = Math.max(inner.scrollTop - amount, 0);
-}
-
-function scrollDownBy(amount) {
-    var inner = frame.contentDocument.body;
-    inner.scrollTop = Math.min(inner.scrollTop + amount, inner.scrollHeight);
-}
-
-function lineUp() {
-    if (!isFrameTop()) {
-        scrollUpBy(frameFontSize());
-    }
-}
-
-function lineDown() {
-    if (!isFrameBottom()) {
-        scrollDownBy(frameFontSize());
-    }
-}
-
-function pageUp() {
-    if (!isFrameTop()) {
-        scrollUpBy(framePageSize());
-    }
-}
-
-function pageDown() {
-    if (!isFrameBottom()) {
-        scrollDownBy(framePageSize());
-    }
-}
-
-function pageDownOrNextDocument() {
-    if (!isFrameBottom()) {
-        scrollDownBy(framePageSize());
-    } else {
+    if (inner.scrollTop === inner.scrollHeight - frame.clientHeight) {
+        e.preventDefault();
         nextDocument();
     }
 }
@@ -118,30 +56,8 @@ function pageDownOrNextDocument() {
 function keyHandler(e) {
     if (e.keyCode === 81 || e.keyCode === 27) { // Q / ESC
         window.chicken.quit();
-    } else if (e.keyCode === 32) { // SPC
-        if (e.shiftKey) {
-            pageUp();
-        } else {
-            pageDownOrNextDocument();
-        }
-    } else if (e.keyCode === 71) { // G
-        if (e.shiftKey) {
-            frameBottom();
-        } else {
-            frameTop();
-        }
-    } else if (e.keyCode === 36) { // <home>
-        frameTop();
-    } else if (e.keyCode === 35) { // <end>
-        frameBottom();
-    } else if (e.keyCode === 33) { // <pgup>
-        pageUp();
-    } else if (e.keyCode === 34) { // <pgdn>
-        pageDown();
-    } else if (e.keyCode === 75 || e.keyCode == 38) { // K / <up>
-        lineUp();
-    } else if (e.keyCode === 74 || e.keyCode == 40) { // J / <down>
-        lineDown();
+    } else if (e.keyCode === 32 && !e.shiftKey) { // SPC
+        maybeNextDocument(e);
     } else if (e.keyCode === 80) { // P
         prevDocument();
     } else if (e.keyCode === 78) { // N
@@ -150,4 +66,3 @@ function keyHandler(e) {
 }
 
 window.addEventListener('load', init);
-window.addEventListener('keydown', keyHandler);
