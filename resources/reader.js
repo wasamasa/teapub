@@ -60,6 +60,19 @@ function isFrameBottom() {
     return inner.scrollTop === inner.scrollHeight - frame.clientHeight;
 }
 
+function frameTop() {
+    if (!isFrameTop()) {
+        frame.contentDocument.body.scrollTop = 0;
+    }
+}
+
+function frameBottom() {
+    if (!isFrameBottom()) {
+        var inner = frame.contentDocument.body;
+        inner.scrollTop = inner.scrollHeight - frame.clientHeight;
+    }
+}
+
 function scrollUpBy(amount) {
     var inner = frame.contentDocument.body;
     inner.scrollTop = Math.max(inner.scrollTop - amount, 0);
@@ -103,14 +116,24 @@ function pageDownOrNextDocument() {
 }
 
 function keyHandler(e) {
-    if (e.keyCode === 81 || e.keyCode === 27 ) { // Q / ESC
+    if (e.keyCode === 81 || e.keyCode === 27) { // Q / ESC
         window.chicken.quit();
-    } else if (e.keyCode === 32 ) { // SPC
+    } else if (e.keyCode === 32) { // SPC
         if (e.shiftKey) {
             pageUp();
         } else {
             pageDownOrNextDocument();
         }
+    } else if (e.keyCode === 71) { // G
+        if (e.shiftKey) {
+            frameBottom();
+        } else {
+            frameTop();
+        }
+    } else if (e.keyCode === 36) { // <home>
+        frameTop();
+    } else if (e.keyCode === 35) { // <end>
+        frameBottom();
     } else if (e.keyCode === 33) { // <pgup>
         pageUp();
     } else if (e.keyCode === 34) { // <pgdn>
