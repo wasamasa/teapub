@@ -42,10 +42,16 @@ function nextDocument() {
     }
 }
 
+function pageScrollSize() {
+    var inner = frame.contentDocument.body;
+    var fontSize = parseFloat(window.getComputedStyle(inner, null).fontSize);
+    return Math.floor(frame.clientHeight - fontSize);
+}
+
 function pageUp() {
     var inner = frame.contentDocument.body;
     if (inner.scrollTop > 0) {
-        var scrollTop = Math.max(inner.scrollTop - frame.clientHeight, 0);
+        var scrollTop = Math.max(inner.scrollTop - pageScrollSize(), 0);
         inner.scrollTop = scrollTop;
     }
 }
@@ -53,7 +59,7 @@ function pageUp() {
 function pageDown() {
     var inner = frame.contentDocument.body;
     if (inner.scrollTop < inner.scrollHeight - frame.clientHeight) {
-        var scrollTop = Math.min(inner.scrollTop + frame.clientHeight,
+        var scrollTop = Math.min(inner.scrollTop + pageScrollSize(),
                                  inner.scrollHeight);
         inner.scrollTop = scrollTop;
     }
@@ -62,7 +68,7 @@ function pageDown() {
 function pageDownOrNextDocument() {
     var inner = frame.contentDocument.body;
     if (inner.scrollTop < inner.scrollHeight - frame.clientHeight) {
-        var scrollTop = Math.min(inner.scrollTop + frame.clientHeight,
+        var scrollTop = Math.min(inner.scrollTop + pageScrollSize(),
                                  inner.scrollHeight);
         inner.scrollTop = scrollTop;
     } else {
