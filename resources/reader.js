@@ -1,9 +1,17 @@
-var documents, index, frame;
+var documents, filename, lastPlace, index, frame;
 
 function init() {
     frame = document.getElementById('content');
     documents = window.chicken.documents();
-    index = 0;
+
+    filename = window.chicken.filename();
+    lastPlace = window.chicken.lastPlace(filename);
+    if (lastPlace.type === 'vector') {
+        index = lastPlace[0];
+    } else {
+        index = 0;
+    }
+
     frame.src = documents[index];
     frame.addEventListener('load', initFrame);
 }
@@ -15,6 +23,12 @@ function initFrame() {
     var stylesheet = window.chicken.stylesheet();
     if (stylesheet) {
         injectStyle(frame.contentDocument.head, stylesheet);
+    }
+
+    if (lastPlace.type === 'vector') {
+        frame.contentDocument.body.scrollTop = lastPlace[1];
+        // HACK: restore the last location only once
+        lastPlace = false;
     }
 }
 
@@ -55,6 +69,8 @@ function maybeNextDocument(e) {
 
 function keyHandler(e) {
     if (e.keyCode === 81 || e.keyCode === 27) { // Q / ESC
+        var scrollTop = frame.contentDocument.body.scrollTop;
+        window.chicken.addToLastPlaces(filename, index, scrollTop);
         window.chicken.quit();
     } else if (e.keyCode === 32 && !e.shiftKey) { // SPC
         maybeNextDocument(e);
@@ -65,4 +81,4 @@ function keyHandler(e) {
     }
 }
 
-window.addEventListener('load', init);
+window.addEventListener('DOMContentLoaded', init);

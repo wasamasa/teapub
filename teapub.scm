@@ -93,22 +93,58 @@
   (let* ((sxml (parse-xml (container-file directory)))
          (content-file (make-pathname directory (container-content-file sxml)))
          (sxml (parse-xml content-file)))
-    ;; NOTE: files referenced by the content file is relative to it
+    ;; NOTE: files referenced by the content file are relative to it
     (content-files (pathname-directory content-file) sxml)))
 
 (define (clean-up directory)
   (when (file-exists? directory)
     (delete-directory directory #t)))
 
+;;; last places
+
+(define last-places (make-parameter '()))
+
+(define (last-place filename)
+  (and-let* ((place (alist-ref filename (last-places) equal?)))
+    (list->vector place)))
+
+(define last-places-file
+  (let ((data-home (get-environment-variable "XDG_DATA_HOME")))
+    (if (and data-home (equal? (string-ref data-home 0) #\/))
+        (string-append data-home "/teapub/last_places")
+        (string-append (get-environment-variable "HOME")
+                       "/.local/share/teapub/last_places"))))
+
+(define (load-last-places)
+  (when (file-exists? last-places-file)
+    (let ((places (with-input-from-file last-places-file read)))
+      (last-places places))))
+
+(define (dump-last-places)
+  (let ((base-directory (pathname-directory last-places-file)))
+    (when (not (file-exists? base-directory))
+      (create-directory base-directory #t)))
+  (with-output-to-file last-places-file
+    (lambda () (pp (last-places)))))
+
+(define (add-to-last-places filename index scroll-top)
+  (last-places (alist-update filename (list index scroll-top)
+                             (last-places) equal?)))
+
 ;;; webkit
 
 (define documents (make-parameter #()))
 (define stylesheet (make-parameter #f))
+(define epub-filename (make-parameter #f))
 
 (define (initialize-webkit-window! window)
   (let ((chicken (jso-new (jso-ref window 'Object))))
     (jso-set! chicken 'documents documents)
     (jso-set! chicken 'stylesheet stylesheet)
+    (jso-set! chicken 'filename epub-filename)
+    (jso-set! chicken 'addToLastPlaces add-to-last-places)
+    (jso-set! chicken 'lastPlace last-place)
+    (jso-set! chicken 'lastPlaces last-places)
     (jso-set! chicken 'quit main-loop-quit!)
     (jso-set! window 'chicken chicken)))
 
@@ -145,11 +181,14 @@
       (clean-up directory)
       (exit 1))
 
+    (epub-filename (pathname-strip-directory filename))
+    (load-last-places)
     (when (file-exists? "style.css")
       (stylesheet (file-url "style.css")))
     (documents (list->vector (epub-documents directory)))
     (open-webkit-window! (file-url "resources/index.html"))
 
-    (clean-up directory)))
+    (clean-up directory)
+    (dump-last-places)))
 
 (main)
