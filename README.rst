@@ -1,6 +1,8 @@
 Teapub
 ======
 
+`Screenshot <https://raw.github.com/wasamasa/teapub/master/img/scrot.png>`_
+
 About
 -----
 
