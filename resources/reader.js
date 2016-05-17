@@ -20,9 +20,9 @@ function initFrame() {
     frame.contentWindow.focus();
     frame.contentDocument.addEventListener('keydown', keyHandler);
 
-    var stylesheet = window.chicken.stylesheet();
-    if (stylesheet) {
-        injectStyle(frame.contentDocument.head, stylesheet);
+    var userStylesheet = window.chicken.userStylesheet();
+    if (userStylesheet) {
+        injectStyle(frame.contentDocument.head, userStylesheet);
     }
 
     if (lastPlace.type === 'vector') {

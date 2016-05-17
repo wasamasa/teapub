@@ -1,0 +1,6 @@
+(compile "teapub.scm")
+(install-program 'teapub "teapub")
+
+(let ((resources-path (make-pathname (chicken-home) "teapub/")))
+  (create-directory resources-path)
+  (copy-file "resources/" resources-path))

@@ -1,0 +1,6 @@
+((synopsis "Webkit-based EPUB viewer")
+ (author "Vasilij Schneidermann")
+ (license "GPL3")
+ (category "parsing")
+ (depends srfi-1 scsh-process ssax sxpath sxml-transforms webkit)
+ (foreign-depends "unzip"))

@@ -108,7 +108,7 @@
   (and-let* ((place (alist-ref filename (last-places) equal?)))
     (list->vector place)))
 
-(define last-places-file
+(define (last-places-file)
   (let ((data-home (get-environment-variable "XDG_DATA_HOME")))
     (if (and data-home (equal? (string-ref data-home 0) #\/))
         (string-append data-home "/teapub/last_places")
@@ -116,15 +116,15 @@
                        "/.local/share/teapub/last_places"))))
 
 (define (load-last-places)
-  (when (file-exists? last-places-file)
-    (let ((places (with-input-from-file last-places-file read)))
+  (when (file-exists? (last-places-file))
+    (let ((places (with-input-from-file (last-places-file) read)))
       (last-places places))))
 
 (define (dump-last-places)
-  (let ((base-directory (pathname-directory last-places-file)))
+  (let ((base-directory (pathname-directory (last-places-file))))
     (when (not (file-exists? base-directory))
       (create-directory base-directory #t)))
-  (with-output-to-file last-places-file
+  (with-output-to-file (last-places-file)
     (lambda () (pp (last-places)))))
 
 (define (add-to-last-places filename index scroll-top)
@@ -133,14 +133,21 @@
 
 ;;; webkit
 
+(define (user-stylesheet-file)
+  (let ((config-home (get-environment-variable "XDG_CONFIG_HOME")))
+    (if (and config-home (equal? (string-ref config-home 0) #\/))
+        (string-append config-home "/teapub/style.css")
+        (string-append (get-environment-variable "HOME")
+                       "/.config/teapub/style.css"))))
+
 (define documents (make-parameter #()))
-(define stylesheet (make-parameter #f))
 (define epub-filename (make-parameter #f))
+(define user-stylesheet (make-parameter #f))
 
 (define (initialize-webkit-window! window)
   (let ((chicken (jso-new (jso-ref window 'Object))))
     (jso-set! chicken 'documents documents)
-    (jso-set! chicken 'stylesheet stylesheet)
+    (jso-set! chicken 'userStylesheet user-stylesheet)
     (jso-set! chicken 'filename epub-filename)
     (jso-set! chicken 'addToLastPlaces add-to-last-places)
     (jso-set! chicken 'lastPlace last-place)
@@ -161,10 +168,11 @@
   (with-output-to-port (current-error-port)
     (lambda () (apply print args))))
 
-(define (file-url filename)
-  (let ((path (make-absolute-pathname (current-directory) filename)))
-    (string-append "file://" path)))
+(define (resources-directory)
+  (make-pathname (chicken-home) "teapub/"))
 
+(define (file-url path)
+  (string-append "file://" path))
 (define (main)
   (when (not (= (length (command-line-arguments)) 1))
     (print-error "No filename specified")
@@ -183,10 +191,10 @@
 
     (epub-filename (pathname-strip-directory filename))
     (load-last-places)
-    (when (file-exists? "style.css")
-      (stylesheet (file-url "style.css")))
+    (when (file-exists? (user-stylesheet-file))
+      (user-stylesheet (file-url (user-stylesheet-file))))
     (documents (list->vector (epub-documents directory)))
-    (open-webkit-window! (file-url "resources/index.html"))
+    (open-webkit-window! (file-url (make-pathname (resources-directory) "index.html")))
 
     (clean-up directory)
     (dump-last-places)))
