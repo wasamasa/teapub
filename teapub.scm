@@ -164,6 +164,12 @@
 
 ;;; CLI
 
+(define (extend-exception-handler thunk)
+  (let ((original-handler (current-exception-handler)))
+    (lambda (exception)
+      (thunk)
+      (original-handler exception))))
+
 (define (print-error . args)
   (with-output-to-port (current-error-port)
     (lambda () (apply print args))))
@@ -179,14 +185,16 @@
     (exit 1))
   (let* ((directory (create-temporary-directory))
          (filename (car (command-line-arguments)))
-         (status (unzip-epub directory filename)))
+         (status (unzip-epub directory filename))
+         (clean-up-thunk (lambda () (clean-up directory))))
+    (on-exit clean-up-thunk)
+    (extend-exception-handler clean-up-thunk)
+
     (when (not status)
       (print-error "Could not extract archive")
-      (clean-up directory)
       (exit 1))
     (when (not (epub-valid? directory))
       (print-error "Invalid EPUB file")
-      (clean-up directory)
       (exit 1))
 
     (epub-filename (pathname-strip-directory filename))
@@ -196,7 +204,6 @@
     (documents (list->vector (epub-documents directory)))
     (open-webkit-window! (file-url (make-pathname (resources-directory) "index.html")))
 
-    (clean-up directory)
     (dump-last-places)))
 
 (main)
