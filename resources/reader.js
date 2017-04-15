@@ -33,11 +33,6 @@ function initFrame() {
 }
 
 function injectStyle(element, stylesheet) {
-    var links = element.querySelectorAll('link[rel="stylesheet"]');
-    for (var i = 0; i < links.length; i++) {
-        links[i].remove();
-    }
-
     var link = document.createElement('link');
     link.href = stylesheet;
     link.rel = 'stylesheet';
