@@ -1,5 +1,6 @@
 (compile "teapub.scm")
 (install-program 'teapub "teapub")
+(run (chicken-spock "resources/reader.scm" -o "resources/reader.js"))
 
 (let ((resources-path (make-pathname (chicken-home) "teapub/")))
   (create-directory resources-path)

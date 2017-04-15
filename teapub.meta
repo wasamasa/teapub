@@ -2,5 +2,5 @@
  (author "Vasilij Schneidermann")
  (license "GPL3")
  (category "parsing")
- (depends srfi-1 scsh-process ssax sxpath sxml-transforms webkit)
+ (depends srfi-1 scsh-process ssax sxpath sxml-transforms webkit spock)
  (foreign-depends "unzip"))
