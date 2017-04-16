@@ -19,8 +19,7 @@
 
 (define (init-frame)
   (%inline ".contentWindow.focus" frame)
-  (%inline ".addEventListener" (.contentWindow frame) "keydown"
-           (callback-method key-handler))
+  (%inline ".addEventListener" (.contentWindow frame) "keydown" (callback key-handler))
 
   (let ((user-stylesheet (%inline "window.chicken.userStylesheet")))
     (when user-stylesheet
@@ -48,24 +47,22 @@
     (set! index (+ index 1))
     (set! (.src frame) (vector-ref documents index))))
 
-(define (maybe-next-document! this)
-  (let ((event (.event this))
-        (inner (.contentDocument.body frame)))
+(define (maybe-next-document! event)
+  (let ((inner (.contentDocument.body frame)))
     (when (= (.scrollTop inner) (- (.scrollHeight inner) (.clientHeight frame)))
       (.preventDefault event)
       (next-document!))))
 
-(define (key-handler this)
-  (let* ((event (.event this))
-         (key-code (.keyCode event))
-         (shift? (.shiftKey event)))
+(define (key-handler event)
+  (let ((key-code (.keyCode event))
+        (shift? (.shiftKey event)))
     (cond
      ((or (= key-code 81) (= key-code 27)) ;; Q / ESC
       (let ((scroll-top (.contentDocument.body.scrollTop frame)))
         (%inline "window.chicken.addToLastPlaces" filename index scroll-top)
         (%inline "window.chicken.quit")))
      ((and (= key-code 32) (not shift?)) ;; SPC
-      (maybe-next-document! this))
+      (maybe-next-document! event))
      ((= key-code 80) ;; P
       (prev-document!))
      ((= key-code 78) ;; N
