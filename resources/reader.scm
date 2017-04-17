@@ -15,26 +15,32 @@
       (set! index 0))
 
   (set! (.src frame) (vector-ref documents index))
-  (set! (.onload frame) (callback init-frame)))
+  (%inline ".addEventListener" frame "load" (callback init-frame)))
+
+(define (maybe-set-scroll!)
+  (when (equal? (.type last-place) "vector")
+    (set! (.contentDocument.body.scrollTop frame) (vector-ref last-place 1))
+    ;; HACK: restore the last location only once
+    (set! last-place #f)))
 
 (define (init-frame)
   (%inline ".contentWindow.focus" frame)
   (%inline ".addEventListener" (.contentWindow frame) "keydown" (callback key-handler))
 
   (let ((user-stylesheet (%inline "window.chicken.userStylesheet")))
-    (when user-stylesheet
-      (inject-style! (.contentDocument.head frame) user-stylesheet)))
-
-  (when (equal? (.type last-place) "vector")
-    (set! (.contentDocument.body.scrollTop frame) (vector-ref last-place 1))
-    ;; HACK: restore the last location only once
-    (set! last-place #f)))
+    (if user-stylesheet
+        (inject-style! (.contentDocument.head frame) user-stylesheet)
+        ;; there is no custom stylesheet, so scroll can be set now
+        (maybe-set-scroll!))))
 
 (define (inject-style! element stylesheet)
   (let ((link (%inline "document.createElement" "link")))
     (set! (.href link) stylesheet)
     (set! (.rel link) "stylesheet")
     (set! (.type link) "text/css")
+    ;; there is a custom stylesheet, so set scroll after it's loaded
+    ;; in case it changed the iframe height
+    (set! (.onload link) (callback maybe-set-scroll!))
     (%inline ".appendChild" element link)))
 
 (define (prev-document!)
