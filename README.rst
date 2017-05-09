@@ -45,7 +45,7 @@ FAQ
 ---
 
 **Q**: When I open an epub file, I see a window with the cover
-thumnail open.  Shortly after the viewer quits for no apparent
+thumbnail open.  Shortly after the viewer quits for no apparent
 reason.  What's going on here?
 
 **A**: This is a focus bug in the webkit egg.  For yet unknown reasons
